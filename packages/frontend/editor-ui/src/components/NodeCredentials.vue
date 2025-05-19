@@ -85,31 +85,30 @@ const filter = ref('');
 const listeningForAuthChange = ref(false);
 const selectRefs = ref<Array<InstanceType<typeof N8nSelect>>>([]);
 
+const credentialTypesNodeDescriptions = computed(() =>
+	credentialsStore.getCredentialTypesNodeDescriptions(
+		props.overrideCredType,
+		nodeType.value,
+		credentialsStore,
+	),
+);
+
 const credentialTypesNode = computed(() =>
-	credentialTypesNodeDescription.value.map(
+	credentialTypesNodeDescriptions.value.map(
 		(credentialTypeDescription) => credentialTypeDescription.name,
 	),
 );
 
 const credentialTypesNodeDescriptionDisplayed = computed(() =>
-	credentialTypesNodeDescription.value
-		.filter((credentialTypeDescription) => displayCredentials(credentialTypeDescription))
+	credentialTypesNodeDescriptions.value
+		.filter((credentialTypeDescription) =>
+			credentialsStore.getDisplayedForCredentialTypesNodeDescription(
+				credentialTypeDescription,
+				props.node,
+			),
+		)
 		.map((type) => ({ type, options: getCredentialOptions(getAllRelatedCredentialTypes(type)) })),
 );
-const credentialTypesNodeDescription = computed(() => {
-	if (typeof props.overrideCredType !== 'string') return [];
-
-	const credType = credentialsStore.getCredentialTypeByName(props.overrideCredType);
-
-	if (credType) return [credType];
-
-	const activeNodeType = nodeType.value;
-	if (activeNodeType?.credentials) {
-		return activeNodeType.credentials;
-	}
-
-	return [];
-});
 
 const credentialTypeNames = computed(() => {
 	const returnData: Record<string, string> = {};
@@ -427,19 +426,6 @@ function onCredentialSelected(
 	};
 
 	emit('credentialSelected', updateInformation);
-}
-
-function displayCredentials(credentialTypeDescription: INodeCredentialDescription): boolean {
-	if (credentialTypeDescription.displayOptions === undefined) {
-		// If it is not defined no need to do a proper check
-		return true;
-	}
-	return nodeHelpers.displayParameter(
-		props.node.parameters,
-		credentialTypeDescription,
-		'',
-		props.node,
-	);
 }
 
 function getIssues(credentialTypeName: string): string[] {

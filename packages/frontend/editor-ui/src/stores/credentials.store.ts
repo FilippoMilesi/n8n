@@ -20,11 +20,15 @@ import { isEmpty, isPresent } from '@/utils/typesUtils';
 import type {
 	ICredentialsDecrypted,
 	ICredentialType,
+	INodeCredentialDescription,
 	INodeCredentialTestResult,
+	INodeTypeDescription,
+	NodeParameterValueType,
 } from 'n8n-workflow';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { useNodeTypesStore } from './nodeTypes.store';
+import { useNodeHelpers } from '@/composables/useNodeHelpers';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useSettingsStore } from './settings.store';
 import * as aiApi from '@/api/ai';
@@ -39,6 +43,8 @@ export const useCredentialsStore = defineStore(STORES.CREDENTIALS, () => {
 	const state = ref<ICredentialsState>({ credentialTypes: {}, credentials: {} });
 
 	const rootStore = useRootStore();
+
+	const nodeHelpers = useNodeHelpers();
 
 	// ---------------------------------------------------------------------------
 	// #region Computed
@@ -298,6 +304,36 @@ export const useCredentialsStore = defineStore(STORES.CREDENTIALS, () => {
 		return await credentialsApi.getCredentialData(rootStore.restApiContext, id);
 	};
 
+	const getCredentialTypesNodeDescriptions: (
+		overrideCredType: NodeParameterValueType,
+		nodeType: INodeTypeDescription | null,
+		credentialsStore: CredentialsStore,
+	) => INodeCredentialDescription[] = (overrideCredType, nodeType, credentialsStore) => {
+		if (typeof overrideCredType !== 'string') return [];
+
+		const credType = credentialsStore.getCredentialTypeByName(overrideCredType);
+
+		if (credType) return [credType];
+
+		const activeNodeType = nodeType;
+		if (activeNodeType?.credentials) {
+			return activeNodeType.credentials;
+		}
+
+		return [];
+	};
+
+	const getDisplayedForCredentialTypesNodeDescription = (
+		credentialTypeDescription: INodeCredentialDescription,
+		node: INodeUi,
+	) => {
+		if (credentialTypeDescription.displayOptions === undefined) {
+			// If it is not defined no need to do a proper check
+			return true;
+		}
+		return nodeHelpers.displayParameter(node.parameters, credentialTypeDescription, '', node);
+	};
+
 	const createNewCredential = async (
 		data: ICredentialsDecrypted,
 		projectId?: string,
@@ -444,6 +480,8 @@ export const useCredentialsStore = defineStore(STORES.CREDENTIALS, () => {
 		createNewCredential,
 		updateCredential,
 		getCredentialData,
+		getCredentialTypesNodeDescriptions,
+		getDisplayedForCredentialTypesNodeDescription,
 		oAuth1Authorize,
 		oAuth2Authorize,
 		getNewCredentialName,
