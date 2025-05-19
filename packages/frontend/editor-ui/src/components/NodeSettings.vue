@@ -210,7 +210,7 @@ const parametersNoneSetting = computed(() =>
 const isDisplayingCredentials = computed(
 	() =>
 		credentialsStore
-			.getCredentialTypesNodeDescriptions('', props.nodeType, credentialsStore)
+			.getCredentialTypesNodeDescriptions('', props.nodeType)
 			.filter(
 				(credentialTypeDescription) =>
 					node.value &&

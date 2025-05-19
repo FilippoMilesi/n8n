@@ -86,11 +86,7 @@ const listeningForAuthChange = ref(false);
 const selectRefs = ref<Array<InstanceType<typeof N8nSelect>>>([]);
 
 const credentialTypesNodeDescriptions = computed(() =>
-	credentialsStore.getCredentialTypesNodeDescriptions(
-		props.overrideCredType,
-		nodeType.value,
-		credentialsStore,
-	),
+	credentialsStore.getCredentialTypesNodeDescriptions(props.overrideCredType, nodeType.value),
 );
 
 const credentialTypesNode = computed(() =>
