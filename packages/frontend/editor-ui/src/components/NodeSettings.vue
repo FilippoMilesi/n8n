@@ -207,6 +207,26 @@ const parametersNoneSetting = computed(() =>
 	parameters.value.filter((item) => !item.isNodeSetting),
 );
 
+const isDisplayingCredentials = computed(
+	() =>
+		credentialsStore
+			.getCredentialTypesNodeDescriptions('', props.nodeType, credentialsStore)
+			.filter(
+				(credentialTypeDescription) =>
+					node.value &&
+					credentialsStore.getDisplayedForCredentialTypesNodeDescription(
+						credentialTypeDescription,
+						node.value,
+					),
+			).length > 0,
+);
+
+const showNoParametersNotice = computed(
+	() =>
+		!isDisplayingCredentials.value &&
+		parametersNoneSetting.value.filter((item) => item.type !== 'notice').length === 0,
+);
+
 const outputPanelEditMode = computed(() => ndvStore.outputPanelEditMode);
 
 const isCommunityNode = computed(() => !!node.value && isCommunityPackageName(node.value.type));
@@ -1077,7 +1097,7 @@ onBeforeUnmount(() => {
 						@blur="onParameterBlur"
 					/>
 				</ParameterInputList>
-				<div v-if="parametersNoneSetting.length === 0" class="no-parameters">
+				<div v-if="showNoParametersNotice" class="no-parameters">
 					<n8n-text>
 						{{ i18n.baseText('nodeSettings.thisNodeDoesNotHaveAnyParameters') }}
 					</n8n-text>
